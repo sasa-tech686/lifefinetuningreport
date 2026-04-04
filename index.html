@@ -1706,7 +1706,7 @@ function generateToken(name, dv){
 }
 
 function validateToken(name, dv, token){
-  if(!token) return true; // no token = demo mode (no ?token= param)
+  if(!token) return false; // no token = always blocked
   return generateToken(name, dv) === token.toLowerCase();
 }
 
@@ -1716,19 +1716,28 @@ function getP(){
     name:u.get('name')||'示例客户 Demo',
     email:u.get('email')||'',
     dv:u.get('dv')||'1988-04-07',
-    tv:u.get('tv')||'01:01',
+    tv:u.get('tv')||'14:30',
     tz:parseFloat(u.get('tz')||'8'),
-    phone:u.get('phone')||'99834',
+    phone:u.get('phone')||'88168',
     token:u.get('token')||''
   };
 }
 window.addEventListener('DOMContentLoaded',()=>{
   const p=getP();
-  // Validate token — if token param exists, must match
-  const hasToken = !!new URLSearchParams(window.location.search).get('token');
-  if(hasToken && !validateToken(p.name, p.dv, p.token)){
-    document.getElementById('invalid-overlay').classList.add('show');
-    return;
+  const u=new URLSearchParams(window.location.search);
+  const isDemo = u.get('demo')==='1';        // ?demo=1 = your private test mode
+  const hasToken = !!u.get('token');          // has token param
+
+  // Block if: no demo mode AND (no token OR invalid token)
+  if(!isDemo){
+    if(!hasToken){
+      document.getElementById('invalid-overlay').classList.add('show');
+      return;
+    }
+    if(!validateToken(p.name, p.dv, p.token)){
+      document.getElementById('invalid-overlay').classList.add('show');
+      return;
+    }
   }
   try{render(p)}
   catch(e){document.getElementById('cv-badge').textContent='Error: '+e.message;console.error(e)}
